@@ -1,118 +1,155 @@
-import { Routes, Route, Navigate } from "react-router-dom";
-
-import PublicLayout from "./layouts/PublicLayout";
-import BuyerLayout from "./layouts/BuyerLayout";
-import SupplierLayout from "./layouts/SupplierLayout";
-import AdminLayout from "./layouts/AdminLayout";
-import ProtectedRoute from "./app/routes/ProtectedRoute";
-
-import Home from "./pages/public/Home";
-import Login from "./pages/public/Login";
-import Register from "./pages/public/Register";
-import Marketplace from "./pages/public/Marketplace";
-import ProductDetail from "./pages/public/ProductDetail";
-import HowItWorks from "./pages/public/HowItWorks";
-
-import BuyerDashboard from "./pages/buyer/Dashboard";
-import MyEngines from "./pages/buyer/MyEngines";
-import EngineDetail from "./pages/buyer/EngineDetail";
-import RULAnalysis from "./pages/buyer/RULAnalysis";
-import Recommendations from "./pages/buyer/Recommendations";
-import Cart from "./pages/buyer/Cart";
-import Checkout from "./pages/buyer/Checkout";
-import Orders from "./pages/buyer/Orders";
-import OrderDetail from "./pages/buyer/OrderDetail";
-import Wishlist from "./pages/buyer/Wishlist";
-import Notifications from "./pages/buyer/Notifications";
-import CompanyProfile from "./pages/buyer/CompanyProfile";
-import BuyerSettings from "./pages/buyer/Settings";
-
-import SupplierDashboard from "./pages/supplier/Dashboard";
-import SupplierProducts from "./pages/supplier/Products";
-import ProductForm from "./pages/supplier/ProductForm";
-import Inventory from "./pages/supplier/Inventory";
-import SupplierOrders from "./pages/supplier/Orders";
-import SupplierReviews from "./pages/supplier/Reviews";
-import SupplierAnalytics from "./pages/supplier/Analytics";
-import StoreProfile from "./pages/supplier/StoreProfile";
-import SupplierSettings from "./pages/supplier/Settings";
-
-import AdminDashboard from "./pages/admin/Dashboard";
-import AdminUsers from "./pages/admin/Users";
-import AdminCompanies from "./pages/admin/Companies";
-import AdminSuppliers from "./pages/admin/Suppliers";
-import AdminProducts from "./pages/admin/Products";
-import AdminCategories from "./pages/admin/Categories";
-import AdminOrders from "./pages/admin/Orders";
-import AdminReports from "./pages/admin/Reports";
-import RULSystemStatus from "./pages/admin/RULSystemStatus";
-import AdminSettings from "./pages/admin/Settings";
-
+import { Component, Suspense, lazy } from "react";
+import { Routes, Route, Link } from "react-router-dom";
+import { Layout, Guard, CartDrawer } from "./components/Shell";
+import { Loading } from "./components/UI";
+const modules = {
+  Public: () => import("./pages/Public"),
+  Fleet: () => import("./pages/Fleet"),
+  Commerce: () => import("./pages/Commerce"),
+  Supplier: () => import("./pages/Supplier"),
+  Admin: () => import("./pages/Admin"),
+  Account: () => import("./pages/Account"),
+};
+const page = (module, name) =>
+  lazy(() => modules[module]().then((exports) => ({ default: exports[name] })));
+const Home = page("Public", "Home"),
+  Login = page("Public", "Login"),
+  Register = page("Public", "Register"),
+  Marketplace = page("Public", "Marketplace"),
+  Product = page("Public", "ProductDetail"),
+  How = page("Public", "HowItWorks");
+const BuyerDashboard = page("Fleet", "Dashboard"),
+  Engines = page("Fleet", "Engines"),
+  Engine = page("Fleet", "EngineDetail"),
+  RUL = page("Fleet", "RUL"),
+  Recommendations = page("Fleet", "Recommendations"),
+  Wishlist = page("Fleet", "Wishlist");
+const Cart = page("Commerce", "Cart"),
+  Checkout = page("Commerce", "Checkout"),
+  Orders = page("Commerce", "Orders"),
+  Order = page("Commerce", "OrderDetail");
+const SellerDashboard = page("Supplier", "Dashboard"),
+  SellerProducts = page("Supplier", "Products"),
+  ProductForm = page("Supplier", "ProductForm"),
+  Inventory = page("Supplier", "Inventory"),
+  SellerOrders = page("Supplier", "SellerOrders"),
+  Reviews = page("Supplier", "Reviews"),
+  Analytics = page("Supplier", "Analytics");
+const AdminDashboard = page("Admin", "Dashboard"),
+  Users = page("Admin", "Users"),
+  Companies = page("Admin", "Companies"),
+  Suppliers = page("Admin", "Suppliers"),
+  AdminProducts = page("Admin", "Products"),
+  Categories = page("Admin", "Categories"),
+  AdminOrders = page("Admin", "Orders"),
+  Reports = page("Admin", "Reports"),
+  System = page("Admin", "SystemStatus");
+const Notifications = page("Account", "Notifications"),
+  Profile = page("Account", "Profile"),
+  Settings = page("Account", "Settings");
+class Boundary extends Component {
+  state = { error: false };
+  static getDerivedStateFromError() {
+    return { error: true };
+  }
+  render() {
+    return this.state.error ? (
+      <main className="card p-8 m-6">
+        <h1>Unable to display this page</h1>
+        <p className="muted mt-3 mb-5">Reload the workspace and try again.</p>
+        <button className="btn btn-primary" onClick={() => location.reload()}>
+          Reload
+        </button>
+      </main>
+    ) : (
+      this.props.children
+    );
+  }
+}
 export default function App() {
   return (
-    <Routes>
-      {/* Public routes: Home, Marketplace, Product Detail, Auth */}
-      <Route element={<PublicLayout />}>
-        <Route path="/" element={<Home />} />
-        <Route path="/marketplace" element={<Marketplace />} />
-        <Route path="/products/:id" element={<ProductDetail />} />
-        <Route path="/how-it-works" element={<HowItWorks />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-      </Route>
-
-      {/* Buyer portal */}
-      <Route element={<ProtectedRoute role="buyer" />}>
-        <Route element={<BuyerLayout />}>
-          <Route path="/buyer/dashboard" element={<BuyerDashboard />} />
-          <Route path="/buyer/engines" element={<MyEngines />} />
-          <Route path="/buyer/engines/:id" element={<EngineDetail />} />
-          <Route path="/buyer/rul-analysis" element={<RULAnalysis />} />
-          <Route path="/buyer/recommendations" element={<Recommendations />} />
-          <Route path="/buyer/cart" element={<Cart />} />
-          <Route path="/buyer/checkout" element={<Checkout />} />
-          <Route path="/buyer/orders" element={<Orders />} />
-          <Route path="/buyer/orders/:id" element={<OrderDetail />} />
-          <Route path="/buyer/wishlist" element={<Wishlist />} />
-          <Route path="/buyer/notifications" element={<Notifications />} />
-          <Route path="/buyer/company-profile" element={<CompanyProfile />} />
-          <Route path="/buyer/settings" element={<BuyerSettings />} />
-        </Route>
-      </Route>
-
-      {/* Supplier portal */}
-      <Route element={<ProtectedRoute role="supplier" />}>
-        <Route element={<SupplierLayout />}>
-          <Route path="/supplier/dashboard" element={<SupplierDashboard />} />
-          <Route path="/supplier/products" element={<SupplierProducts />} />
-          <Route path="/supplier/products/new" element={<ProductForm />} />
-          <Route path="/supplier/products/:id/edit" element={<ProductForm />} />
-          <Route path="/supplier/inventory" element={<Inventory />} />
-          <Route path="/supplier/orders" element={<SupplierOrders />} />
-          <Route path="/supplier/reviews" element={<SupplierReviews />} />
-          <Route path="/supplier/analytics" element={<SupplierAnalytics />} />
-          <Route path="/supplier/store-profile" element={<StoreProfile />} />
-          <Route path="/supplier/settings" element={<SupplierSettings />} />
-        </Route>
-      </Route>
-
-      {/* Admin portal */}
-      <Route element={<ProtectedRoute role="admin" />}>
-        <Route element={<AdminLayout />}>
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/users" element={<AdminUsers />} />
-          <Route path="/admin/companies" element={<AdminCompanies />} />
-          <Route path="/admin/suppliers" element={<AdminSuppliers />} />
-          <Route path="/admin/products" element={<AdminProducts />} />
-          <Route path="/admin/categories" element={<AdminCategories />} />
-          <Route path="/admin/orders" element={<AdminOrders />} />
-          <Route path="/admin/reports" element={<AdminReports />} />
-          <Route path="/admin/rul-status" element={<RULSystemStatus />} />
-          <Route path="/admin/settings" element={<AdminSettings />} />
-        </Route>
-      </Route>
-
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <Boundary>
+      <Suspense
+        fallback={
+          <div className="p-6">
+            <Loading />
+          </div>
+        }
+      >
+        <Routes>
+          <Route element={<Layout />}>
+            <Route index element={<Home />} />
+            <Route path="login" element={<Login />} />
+            <Route path="register" element={<Register />} />
+            <Route path="marketplace" element={<Marketplace />} />
+            <Route path="products/:id" element={<Product />} />
+            <Route path="how-it-works" element={<How />} />
+          </Route>
+          <Route element={<Guard role="buyer" />}>
+            <Route element={<Layout role="buyer" />}>
+              <Route path="buyer/dashboard" element={<BuyerDashboard />} />
+              <Route path="buyer/engines" element={<Engines />} />
+              <Route path="buyer/engines/:id" element={<Engine />} />
+              <Route path="buyer/rul-analysis" element={<RUL />} />
+              <Route
+                path="buyer/recommendations"
+                element={<Recommendations />}
+              />
+              <Route path="buyer/wishlist" element={<Wishlist />} />
+              <Route path="buyer/cart" element={<Cart />} />
+              <Route path="buyer/checkout" element={<Checkout />} />
+              <Route path="buyer/orders" element={<Orders />} />
+              <Route path="buyer/orders/:id" element={<Order />} />
+              <Route path="buyer/notifications" element={<Notifications />} />
+              <Route path="buyer/company-profile" element={<Profile />} />
+              <Route path="buyer/settings" element={<Settings />} />
+            </Route>
+          </Route>
+          <Route element={<Guard role="supplier" />}>
+            <Route element={<Layout role="supplier" />}>
+              <Route path="supplier/dashboard" element={<SellerDashboard />} />
+              <Route path="supplier/products" element={<SellerProducts />} />
+              <Route path="supplier/products/new" element={<ProductForm />} />
+              <Route
+                path="supplier/products/:id/edit"
+                element={<ProductForm />}
+              />
+              <Route path="supplier/inventory" element={<Inventory />} />
+              <Route path="supplier/orders" element={<SellerOrders />} />
+              <Route path="supplier/reviews" element={<Reviews />} />
+              <Route path="supplier/analytics" element={<Analytics />} />
+              <Route path="supplier/store-profile" element={<Profile />} />
+              <Route path="supplier/settings" element={<Settings />} />
+            </Route>
+          </Route>
+          <Route element={<Guard role="admin" />}>
+            <Route element={<Layout role="admin" />}>
+              <Route path="admin/dashboard" element={<AdminDashboard />} />
+              <Route path="admin/users" element={<Users />} />
+              <Route path="admin/companies" element={<Companies />} />
+              <Route path="admin/suppliers" element={<Suppliers />} />
+              <Route path="admin/products" element={<AdminProducts />} />
+              <Route path="admin/categories" element={<Categories />} />
+              <Route path="admin/orders" element={<AdminOrders />} />
+              <Route path="admin/reports" element={<Reports />} />
+              <Route path="admin/rul-status" element={<System />} />
+              <Route path="admin/settings" element={<Settings />} />
+            </Route>
+          </Route>
+          <Route
+            path="*"
+            element={
+              <main className="card p-8 m-6">
+                <h1>Page not found</h1>
+                <Link className="btn btn-primary mt-5" to="/">
+                  Back to AeroRUL
+                </Link>
+              </main>
+            }
+          />
+        </Routes>
+        <CartDrawer />
+      </Suspense>
+    </Boundary>
   );
 }
