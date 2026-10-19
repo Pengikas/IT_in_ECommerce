@@ -1,3 +1,4 @@
+//gọi api từ server, hoặc dùng dữ liệu demo nếu API_MODE = false
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { API_MODE } from "./config";
 import * as remote from "./api";

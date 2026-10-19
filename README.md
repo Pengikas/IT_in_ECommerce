@@ -1,10 +1,4 @@
-# AeroRUL Marketplace — Front-end
-
-React + Vite front-end scaffold for the B2B Aviation RUL Marketplace, built
-directly from `UI_UX_Frontend_Structure_RUL_Aviation_Marketplace_V2.docx`
-and `AI_RUL_B2B_Aviation_Ecommerce_Project_Concept_VI_RUL_Replacement_V3.docx`.
-
-## Stack (per spec section 11)
+  ## Stack (per spec section 11)
 
 React + Vite · Tailwind CSS · React Router · Recharts for the RUL trend
 chart. No backend yet — `src/services/*Api.js` currently return mock data
@@ -61,7 +55,7 @@ Log in as **Supplier** to see that same order under Supplier → Orders.
 
 ```
 src/
-├── app/routes/ProtectedRoute.jsx   # client-side role guard (backend must still authorize)
+├── 
 ├── layouts/                        # Public / Buyer / Supplier / Admin shells
 ├── components/                     # common, marketplace, engine/RUL, order
 ├── pages/{public,buyer,supplier,admin}/
