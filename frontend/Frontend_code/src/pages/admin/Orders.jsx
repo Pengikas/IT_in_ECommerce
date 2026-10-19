@@ -1,19 +1,30 @@
-import { ORDERS } from "../../services/mockData";
-import DataTable from "../../components/common/DataTable";
-import { formatCurrency, formatDate } from "../../utils/format";
-
-export default function AdminOrders() {
-  const columns = [
-    { key: "id", header: "Order ID" },
-    { key: "placedAt", header: "Date", render: (r) => formatDate(r.placedAt) },
-    { key: "total", header: "Total", render: (r) => formatCurrency(r.total) },
-    { key: "status", header: "Status" },
-  ];
-  return (
-    <div className="space-y-4">
-      <h1 className="text-xl font-semibold text-primary-800">Orders</h1>
-      <p className="text-sm text-neutral-500">Admin observes orders; order fulfillment stays with buyers and suppliers.</p>
-      <DataTable columns={columns} rows={ORDERS} rowKey="id" />
-    </div>
-  );
+import useApp from "../../hooks/useApp";
+import Title from "../../components/common/PageTitle";
+import Table from "../../components/common/DataTable";
+import Badge from "../../components/common/Badge";
+import money from "../../utils/money";
+import date from "../../utils/date";
+export default function Orders() {
+  const {
+    db
+  } = useApp();
+  return <div className="page">
+      <Title eyebrow="ADMIN / PROCUREMENT OVERVIEW" title="Orders" description="Observe order activity; fulfilment belongs to the assigned supplier." />
+      <Table rows={db.orders} columns={[{
+      key: "id",
+      label: "Order reference"
+    }, {
+      key: "placedAt",
+      label: "Placed",
+      render: o => date(o.placedAt)
+    }, {
+      key: "total",
+      label: "Order value",
+      render: o => money(o.total)
+    }, {
+      key: "status",
+      label: "Status",
+      render: o => <Badge>{o.status}</Badge>
+    }]} />
+    </div>;
 }

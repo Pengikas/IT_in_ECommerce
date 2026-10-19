@@ -1,149 +1,172 @@
+import PaymentFields from "../../components/order/PaymentFields";
+import { paymentSummary, PAYMENT_METHODS } from "../../utils/payments";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useCart } from "../../hooks/useCart";
-import { orderApi } from "../../services/orderApi";
-import CheckoutStepper from "../../components/order/CheckoutStepper";
-import { formatCurrency } from "../../utils/format";
-import EmptyState from "../../components/common/EmptyState";
-
-const STEPS = ["Shipping Address", "Delivery Method", "Payment", "Review Order"];
-
+import useApp from "../../hooks/useApp";
+import useRecords from "../../hooks/useRecords";
+import { API_MODE } from "../../services/config";
+import ProductArt from "../../components/marketplace/ProductArt";
+import Icon from "../../components/common/Icon";
+import Title from "../../components/common/PageTitle";
+import State from "../../components/common/QueryState";
+import Empty from "../../components/common/EmptyState";
+import Button from "../../components/common/Button";
+import Field from "../../components/common/Field";
+import Form from "../../components/common/Form";
+import Notice from "../../components/common/Notice";
+import Steps from "../../components/order/CheckoutStepper";
+import money from "../../utils/money";
 export default function Checkout() {
-  const { items, subtotal, clearCart } = useCart();
+  const query = useRecords("cart");
+  const {
+    user,
+    action
+  } = useApp();
+  const navigate = useNavigate();
   const [step, setStep] = useState(0);
-  const [placing, setPlacing] = useState(false);
   const [shipping, setShipping] = useState({
-    companyName: "",
+    companyName: user.companyName,
     taxId: "",
     purchaseRef: "",
     address: "",
-    deliveryMethod: "Standard (5-7 days)",
+    deliveryMethod: "Standard freight",
+    paymentMethod: PAYMENT_METHODS.invoice
   });
-  const navigate = useNavigate();
-
-  if (items.length === 0) {
-    return <EmptyState title="Nothing to check out" description="Your cart is empty." />;
-  }
-
-  function set(key, value) {
-    setShipping((s) => ({ ...s, [key]: value }));
-  }
-
-  async function handlePlaceOrder() {
-    setPlacing(true);
-    const order = await orderApi.placeOrder(items, shipping);
-    clearCart();
+  const [payment, setPayment] = useState({ method: "invoice", billingName: user.name || "", billingEmail: user.email || "", billingAddress: "", transferReference: "", testAuthorization: null });
+  const items = query.data || [];
+  const subtotal = items.reduce((s, i) => s + i.product.price * i.quantity, 0);
+  const fee = shipping.deliveryMethod === "Express air freight" ? 650 : 250;
+  const set = (key, value) => setShipping(s => ({
+    ...s,
+    [key]: value
+  }));
+  const steps = ["Shipping & company", "Delivery method", "Payment", "Review & place order"];
+  async function next(data) {
+    const values = {
+      ...shipping,
+      ...Object.fromEntries(data)
+    };
+    if (step === 0) setPayment(previous => ({ ...previous, billingAddress: previous.billingAddress || values.address }));
+    delete values.confirm;
+    delete values["payment-choice"];
+    if (step === 2) {
+      values.payment = paymentSummary(payment, values, API_MODE);
+      values.paymentMethod = PAYMENT_METHODS[payment.method];
+    }
+    setShipping(values);
+    if (step < 3) {
+      setStep(step + 1);
+      return;
+    }
+    const order = await action("order:create", {
+      items,
+      shipping: values
+    });
+    if (!order?.id) throw Error("Order response is missing its ID.");
     navigate(`/buyer/orders/${order.id}?justPlaced=1`);
   }
-
-  return (
-    <div className="space-y-6">
-      <h1 className="text-xl font-semibold text-primary-800">Checkout</h1>
-      <CheckoutStepper steps={STEPS} currentStep={step} />
-
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-        <div className="card space-y-4 p-5">
-          {step === 0 && (
-            <div className="space-y-3">
-              <div>
-                <label className="label">Company Name</label>
-                <input className="input" value={shipping.companyName} onChange={(e) => set("companyName", e.target.value)} />
-              </div>
-              <div>
-                <label className="label">Business / Tax ID</label>
-                <input className="input" value={shipping.taxId} onChange={(e) => set("taxId", e.target.value)} />
-              </div>
-              <div>
-                <label className="label">Purchase Reference (PO number)</label>
-                <input className="input" value={shipping.purchaseRef} onChange={(e) => set("purchaseRef", e.target.value)} />
-              </div>
-              <div>
-                <label className="label">Shipping Address</label>
-                <textarea className="input" rows={3} value={shipping.address} onChange={(e) => set("address", e.target.value)} />
-              </div>
-            </div>
-          )}
-
-          {step === 1 && (
-            <div className="space-y-2">
-              {["Standard (5-7 days)", "Express (2-3 days)", "Freight (heavy/oversized parts)"].map((opt) => (
-                <label key={opt} className="flex items-center gap-2 rounded-[10px] border border-neutral-200 p-3 text-sm">
-                  <input
-                    type="radio"
-                    checked={shipping.deliveryMethod === opt}
-                    onChange={() => set("deliveryMethod", opt)}
-                  />
-                  {opt}
-                </label>
-              ))}
-            </div>
-          )}
-
-          {step === 2 && (
-            <div className="space-y-3">
-              <p className="text-sm text-neutral-500">Payment simulation — no real charge is made in this demo.</p>
-              <div>
-                <label className="label">Card Number</label>
-                <input className="input" placeholder="4242 4242 4242 4242" />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="label">Expiry</label>
-                  <input className="input" placeholder="MM/YY" />
+  return <div className="page">
+      <Title eyebrow="SECURE PROCUREMENT / CHECKOUT" title="Complete your order" description="Review company details and delivery preferences." />
+      <State query={query}>
+        {!items.length ? <Empty title="Your cart is empty" text="Add a component before checking out." /> : <>
+            <Steps items={steps} current={step} />
+            <div className="purchase-layout">
+              <Form className="card p-6 md:p-8" onSubmit={next}>
+                <h2 className="form-heading">{steps[step]}</h2>
+                {step === 0 && <div className="space-y-5">
+                    <Notice>
+                      {API_MODE ? "Order details are submitted to the backend." : "Business information is used for this demonstration order only."}
+                    </Notice>
+                    <Field label="Company name" name="companyName" required defaultValue={shipping.companyName} />
+                    <Field label="Business / tax ID" name="taxId" required defaultValue={shipping.taxId} />
+                    <Field label="Purchase reference (optional)" name="purchaseRef" defaultValue={shipping.purchaseRef} />
+                    <Field label="Shipping address">
+                      <textarea className="input" rows={3} name="address" required defaultValue={shipping.address} />
+                    </Field>
+                  </div>}
+                {step === 1 && <div className="space-y-4">
+                    {[["Standard freight", "5–7 business days", 250], ["Express air freight", "2–3 business days", 650]].map(([method, desc, price]) => <label key={method} className={"choice-card " + (shipping.deliveryMethod === method ? "selected" : "")}>
+                        <input type="radio" name="deliveryMethod" value={method} checked={shipping.deliveryMethod === method} onChange={() => set("deliveryMethod", method)} />
+                        <div className="flex-1">
+                          <b>{method}</b>
+                          <p className="tiny muted mt-2">{desc} · Estimate</p>
+                        </div>
+                        <b className="mono">{money(price)}</b>
+                      </label>)}
+                  </div>}
+                {step === 2 && <PaymentFields value={payment} onChange={setPayment} shipping={shipping} />}
+                {step === 3 && <div className="space-y-6 text-xs">
+                    <div className="form-grid">
+                      <div>
+                        <p className="eyebrow mb-2">SHIP TO</p>
+                        <b>{shipping.companyName}</b>
+                        <p className="muted mt-2 whitespace-pre-line">
+                          {shipping.address}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="eyebrow mb-2">COMPANY DETAILS</p>
+                        <p>Tax ID: {shipping.taxId}</p>
+                        <p className="mt-2">
+                          PO: {shipping.purchaseRef || "Not provided"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="border-t border-slate-200 pt-4">
+                      <p className="eyebrow mb-2">DELIVERY & PAYMENT</p>
+                      <p>{shipping.deliveryMethod}</p>
+                      <p className="muted mt-2">{shipping.paymentMethod}</p>
+                      <p className="mt-2">{shipping.payment?.status}</p>
+                      <p className="muted mt-2">Billing: {shipping.payment?.billingName} · {shipping.payment?.billingEmail}</p>
+                    </div>
+                    <label className="flex items-start gap-2 muted">
+                      <input type="checkbox" name="confirm" required /><span><span className="required-marker" aria-hidden="true">*</span> I confirm
+                      the shipping details and understand that payment is
+                      simulated.
+                    </span></label>
+                  </div>}
+                <div className="flex justify-between mt-8 pt-5 border-t border-slate-200">
+                  <Button tone="ghost" onClick={() => step ? setStep(step - 1) : navigate("/buyer/cart")}>
+                    ← Back
+                  </Button>
+                  <Button type="submit">
+                    {step === 3 ? API_MODE ? "Submit order to server" : "Place demo order" : "Continue"}
+                    <Icon name="arrow" size={13} />
+                  </Button>
                 </div>
-                <div>
-                  <label className="label">CVC</label>
-                  <input className="input" placeholder="123" />
+              </Form>
+              <aside className="card p-5 checkout-summary">
+                <h2 className="text-sm mb-5">Order summary</h2>
+                {items.map(item => <div key={item.id} className="flex gap-3 mb-5">
+                    <ProductArt product={item.product} className="w-16 h-16 shrink-0 rounded" />
+                    <div className="tiny">
+                      <b>{item.product.name}</b>
+                      <p className="muted mt-2">
+                        Qty {item.quantity} · {money(item.product.price)}
+                      </p>
+                    </div>
+                  </div>)}
+                <div className="summary-lines">
+                  <p>
+                    <span>Subtotal</span>
+                    <span>{money(subtotal)}</span>
+                  </p>
+                  <p>
+                    <span>Estimated shipping</span>
+                    <span>{money(fee)}</span>
+                  </p>
+                  <p className="summary-total">
+                    <span>Total estimate</span>
+                    <b className="mono">{money(subtotal + fee)}</b>
+                  </p>
                 </div>
-              </div>
+                <p className="tiny muted mt-5">
+                  USD ·{" "}
+                  {API_MODE ? "Final totals come from the server. Payment gateway is not connected." : "Demo transaction. No real payment, fulfilment or tax calculation."}
+                </p>
+              </aside>
             </div>
-          )}
-
-          {step === 3 && (
-            <div className="space-y-3 text-sm">
-              <p><span className="text-neutral-500">Ship to:</span> {shipping.companyName || "—"}, {shipping.address || "—"}</p>
-              <p><span className="text-neutral-500">Delivery:</span> {shipping.deliveryMethod}</p>
-              <div className="divide-y divide-neutral-200 border-t border-neutral-200">
-                {items.map(({ product, quantity }) => (
-                  <div key={product.id} className="flex items-center justify-between py-2">
-                    <span>{product.name} × {quantity}</span>
-                    <span>{formatCurrency(product.price * quantity, product.currency)}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="flex justify-between pt-2">
-            <button className="btn-secondary" disabled={step === 0} onClick={() => setStep((s) => s - 1)}>
-              Back
-            </button>
-            {step < STEPS.length - 1 ? (
-              <button className="btn-primary" onClick={() => setStep((s) => s + 1)}>Continue</button>
-            ) : (
-              <button className="btn-primary" onClick={handlePlaceOrder} disabled={placing}>
-                {placing ? "Placing Order…" : "Place Order"}
-              </button>
-            )}
-          </div>
-        </div>
-
-        <div className="card h-fit p-4">
-          <p className="mb-2 font-semibold text-primary-800">Order Summary</p>
-          <div className="space-y-1 text-sm text-neutral-500">
-            {items.map(({ product, quantity }) => (
-              <div key={product.id} className="flex justify-between">
-                <span>{product.name} × {quantity}</span>
-                <span>{formatCurrency(product.price * quantity, product.currency)}</span>
-              </div>
-            ))}
-          </div>
-          <div className="mt-3 flex justify-between border-t border-neutral-200 pt-3 text-sm font-semibold text-primary-800">
-            <span>Total</span>
-            <span>{formatCurrency(subtotal)}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+          </>}
+      </State>
+    </div>;
 }

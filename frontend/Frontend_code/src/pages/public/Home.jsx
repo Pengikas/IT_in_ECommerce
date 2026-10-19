@@ -1,114 +1,113 @@
-import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { productApi } from "../../services/productApi";
-import { SUPPLIERS } from "../../services/mockData";
+import useRecords from "../../hooks/useRecords";
+import Icon from "../../components/common/Icon";
+import ProductArt from "../../components/marketplace/ProductArt";
 import ProductCard from "../../components/marketplace/ProductCard";
-import SearchBar from "../../components/marketplace/SearchBar";
-
+import Button from "../../components/common/Button";
+import Form from "../../components/common/Form";
+import State from "../../components/common/QueryState";
+import HowItWorks from "./HowItWorks";
 export default function Home() {
-  const [categories, setCategories] = useState([]);
-  const [featured, setFeatured] = useState([]);
+  const products = useRecords("products");
+  const categories = useRecords("categories");
+  const suppliers = useRecords("suppliers");
   const navigate = useNavigate();
-
-  useEffect(() => {
-    productApi.listCategories().then(setCategories);
-    productApi.list().then((all) => setFeatured(all.slice(0, 3)));
-  }, []);
-
-  function handleSearch(query) {
-    navigate(`/marketplace?q=${encodeURIComponent(query)}`);
-  }
-
-  return (
-    <div>
-      <section className="border-b border-neutral-200 bg-primary-700 text-white">
-        <div className="container-page grid gap-8 py-16 md:grid-cols-2 md:items-center">
+  return <>
+      <section className="hero">
+        <div className="container hero-grid">
           <div>
-            <h1 className="text-3xl font-bold leading-tight md:text-4xl">
-              Know when to replace an engine part — before it fails you.
-            </h1>
-            <p className="mt-4 max-w-lg text-white/80">
-              AeroRUL predicts remaining useful life from your engine sensor data, flags
-              replacement urgency, and connects you straight to compatible parts from
-              verified aviation suppliers.
+            <p className="eyebrow text-sky-300 mb-6">
+              PRECISION SOURCING. INFORMED DECISIONS.
             </p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Link to="/marketplace" className="btn-accent">Explore Marketplace</Link>
-              <Link to="/register" className="btn-secondary !bg-transparent !text-white !border-white/30">
-                Analyze My Engine
+            <h1>The next mission starts with the right part.</h1>
+            <p className="hero-copy">
+              Connect your engine life insights to smarter sourcing. Discover
+              compatible aviation components from verified suppliers, all in one
+              workspace.
+            </p>
+            <div className="flex flex-wrap gap-3 mt-7">
+              <Link className="btn btn-accent" to="/marketplace">
+                Explore marketplace <Icon name="arrow" size={15} />
+              </Link>
+              <Link className="btn btn-outline" to="/buyer/rul-analysis">
+                Analyse my engine
               </Link>
             </div>
           </div>
-          <div className="rounded-[12px] border border-white/15 bg-white/5 p-6">
-            <p className="mb-3 text-sm font-medium text-white/70">ENG-037 · CFM56-7B</p>
-            <div className="flex items-center gap-4">
-              <div className="mono text-4xl font-bold text-warning">18</div>
-              <div className="text-sm text-white/80">predicted cycles remaining — Replacement Soon</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="container-page -mt-6 pb-2">
-        <div className="card p-4">
-          <SearchBar onSearch={handleSearch} />
-        </div>
-      </section>
-
-      <section className="container-page py-12">
-        <h2 className="mb-4 text-lg font-semibold text-primary-800">Featured Categories</h2>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
-          {categories.map((c) => (
-            <Link
-              key={c.id}
-              to={`/marketplace?category=${c.id}`}
-              className="card flex flex-col items-center gap-2 p-4 text-center hover:border-accent"
-            >
-              <span className="text-2xl">🔩</span>
-              <span className="text-sm font-medium text-primary-800">{c.name}</span>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <section className="container-page py-4">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-primary-800">Featured & Recommended Products</h2>
-          <Link to="/marketplace" className="text-sm font-medium text-accent hover:underline">View all</Link>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {featured.map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-        </div>
-      </section>
-
-      <section className="container-page py-12">
-        <h2 className="mb-4 text-lg font-semibold text-primary-800">Verified Suppliers</h2>
-        <div className="grid gap-4 sm:grid-cols-3">
-          {SUPPLIERS.map((s) => (
-            <div key={s.id} className="card p-4">
-              <p className="font-medium text-primary-800">{s.name}</p>
-              <p className="text-sm text-neutral-500">{s.region} · ⭐ {s.rating}</p>
-              {s.verified && <p className="mt-1 text-xs font-medium text-accent">✔ Verified supplier</p>}
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="border-t border-neutral-200 bg-white py-12">
-        <div className="container-page">
-          <h2 className="mb-6 text-lg font-semibold text-primary-800">How RUL-Based Replacement Works</h2>
-          <div className="grid gap-4 sm:grid-cols-4">
-            {["Predict", "Understand", "Recommend", "Purchase"].map((step, idx) => (
-              <div key={step} className="card p-4">
-                <p className="mono text-xs text-neutral-500">{idx + 1}</p>
-                <p className="mt-1 font-medium text-primary-800">{step}</p>
+          <div className="hero-visual">
+            <p className="eyebrow text-sky-200">FLEET INTELLIGENCE / ENG-037</p>
+            <ProductArt product={{
+            image: "engine",
+            name: "Turbofan engine"
+          }} className="h-60" />
+            <div className="flex items-center justify-between border-t border-white/20 pt-5">
+              <div>
+                <p className="tiny text-slate-300">DEMO PREDICTED RUL</p>
+                <strong className="mono text-3xl">
+                  18 <span className="text-xs font-normal">cycles</span>
+                </strong>
               </div>
-            ))}
+              <span className="hero-status">Replacement planning</span>
+            </div>
           </div>
         </div>
       </section>
-    </div>
-  );
+      <section className="container py-8">
+        <Form className="card p-4 flex gap-3" onSubmit={data => navigate("/marketplace?q=" + encodeURIComponent(data.get("q")))}>
+          <input className="input flex-1" name="q" aria-label="Find aviation parts" placeholder="Search part number, engine model or component…" />
+          <Button type="submit">
+            <Icon name="search" size={16} /> Search
+          </Button>
+        </Form>
+      </section>
+      <section className="container py-7">
+        <div className="section-header">
+          <div>
+            <p className="eyebrow mb-2">BUILT AROUND YOUR FLEET</p>
+            <h2>Explore aviation categories</h2>
+          </div>
+          <Link to="/marketplace?tab=categories">All categories →</Link>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+          {(categories.data || []).map(c => <Link key={c.id} className="card category-card" to={"/marketplace?category=" + c.id}>
+              <Icon name="box" size={27} />
+              <h3>{c.name}</h3>
+              <span className="tiny muted">Explore components →</span>
+            </Link>)}
+        </div>
+      </section>
+      <section className="container py-8">
+        <div className="section-header">
+          <div>
+            <p className="eyebrow mb-2">MISSION-READY SOURCING</p>
+            <h2>Featured components</h2>
+          </div>
+          <Link to="/marketplace">View catalog →</Link>
+        </div>
+        <State query={products}>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {(products.data || []).slice(0, 3).map(p => <ProductCard key={p.id} product={p} />)}
+          </div>
+        </State>
+      </section>
+      <section className="container py-9">
+        <div className="section-header">
+          <h2>Your global supplier network</h2>
+          <Link to="/marketplace?tab=suppliers">View suppliers →</Link>
+        </div>
+        <div className="grid md:grid-cols-3 gap-5">
+          {(suppliers.data || []).map(s => <Link className="card p-6" key={s.id} to={"/marketplace?supplier=" + s.id}>
+              <Icon name="building" size={26} />
+              <h3 className="font-semibold mt-5 mb-2">{s.name}</h3>
+              <p className="muted tiny">
+                {s.region} · {s.rating} / 5
+              </p>
+              <p className="text-accent tiny mt-4">
+                {s.verified ? "Verified supplier" : "Verification pending"} →
+              </p>
+            </Link>)}
+        </div>
+      </section>
+      <HowItWorks compact />
+    </>;
 }

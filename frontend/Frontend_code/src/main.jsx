@@ -1,19 +1,13 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
-import App from "./App.jsx";
-import { AuthProvider } from "./app/providers/AuthProvider.jsx";
-import { CartProvider } from "./app/providers/CartProvider.jsx";
+import Provider from "./app/providers/AppProvider";
+import App from "./App";
 import "./index.css";
-
-ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
+ReactDOM.createRoot(document.getElementById("root")).render(<React.StrictMode>
     <BrowserRouter>
-      <AuthProvider>
-        <CartProvider>
-          <App />
-        </CartProvider>
-      </AuthProvider>
+      <Provider>
+        <App />
+      </Provider>
     </BrowserRouter>
-  </React.StrictMode>
-);
+  </React.StrictMode>);

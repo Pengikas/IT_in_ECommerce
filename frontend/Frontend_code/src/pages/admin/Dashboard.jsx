@@ -1,52 +1,88 @@
-import { SUPPLIERS, PRODUCTS, ORDERS } from "../../services/mockData";
-import { formatCurrency } from "../../utils/format";
-
-export default function AdminDashboard() {
-  const revenue = ORDERS.reduce((sum, o) => sum + o.total, 0);
-
-  return (
-    <div className="space-y-6">
-      <h1 className="text-xl font-semibold text-primary-800">Admin Dashboard</h1>
-
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-        {[
-          { label: "Users", value: 128 },
-          { label: "Suppliers", value: SUPPLIERS.length },
-          { label: "Orders", value: ORDERS.length },
-          { label: "Revenue", value: formatCurrency(revenue) },
-          { label: "Products", value: PRODUCTS.length },
-        ].map((kpi) => (
-          <div key={kpi.label} className="card p-4">
-            <p className="text-xl font-semibold text-primary-800">{kpi.value}</p>
-            <p className="text-sm text-neutral-500">{kpi.label}</p>
+import { Link } from "react-router-dom";
+import useApp from "../../hooks/useApp";
+import Title from "../../components/common/PageTitle";
+import Stats from "../../components/common/StatsGrid";
+import Button from "../../components/common/Button";
+import Notice from "../../components/common/Notice";
+import money from "../../utils/money";
+import Sales from "../../components/charts/SalesChart";
+export default function Dashboard() {
+  const {
+    db,
+    action
+  } = useApp();
+  return <div className="page">
+      <Title eyebrow="ADMIN / PLATFORM OVERVIEW" title="Platform dashboard" description="Marketplace activity, partner verification and system overview." />
+      <Stats items={[{
+      label: "SUPPLIERS",
+      value: db.suppliers.length,
+      detail: db.suppliers.filter(s => !s.verified).length + " awaiting verification",
+      icon: "building"
+    }, {
+      label: "ORDERS",
+      value: db.orders.length,
+      detail: "Local demo transactions",
+      icon: "cart"
+    }, {
+      label: "ORDER VALUE",
+      value: money(db.orders.reduce((s, o) => s + o.total, 0)),
+      detail: "Total demonstration order value",
+      icon: "chart"
+    }, {
+      label: "PRODUCTS",
+      value: db.products.length,
+      detail: db.products.filter(p => p.status === "Active").length + " active listings",
+      icon: "box"
+    }]} />
+      <div className="dashboard-columns">
+        <section className="card p-6 min-w-0">
+          <div className="section-header">
+            <div>
+              <h2>Sales and orders</h2>
+              <p>Local order totals by month · USD</p>
+            </div>
+            <Link to="/admin/orders">View orders →</Link>
           </div>
-        ))}
+          <Sales orders={db.orders} />
+        </section>
+        <section className="card p-6">
+          <h2 className="mb-5">RUL service status</h2>
+          <Notice>
+            Live inference API is not connected. Frontend sample analysis is
+            available.
+          </Notice>
+          <dl className="specs mt-6">
+            <dt>Frontend demo</dt>
+            <dd className="text-success">Available</dd>
+            <dt>Prediction API</dt>
+            <dd>Not connected</dd>
+            <dt>Payment gateway</dt>
+            <dd>Simulation only</dd>
+          </dl>
+          <Link className="btn btn-secondary w-full mt-6" to="/admin/rul-status">
+            View system details →
+          </Link>
+        </section>
       </div>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="card p-4">
-          <p className="mb-2 font-semibold text-primary-800">New Supplier Requests</p>
-          <div className="space-y-2 text-sm">
-            {SUPPLIERS.filter((s) => !s.verified).map((s) => (
-              <div key={s.id} className="flex items-center justify-between">
-                <span>{s.name}</span>
-                <div className="flex gap-2">
-                  <button className="btn-secondary !px-2 !py-1 text-xs">Approve</button>
-                  <button className="btn-secondary !px-2 !py-1 text-xs text-critical">Reject</button>
-                </div>
+      <section className="card p-6">
+        <div className="section-header">
+          <h2>New supplier requests</h2>
+          <Link to="/admin/suppliers">View all →</Link>
+        </div>
+        {db.suppliers.filter(s => !s.verified).map(s => <div key={s.id} className="flex flex-wrap items-center justify-between gap-4 py-4 border-t border-slate-200">
+              <div>
+                <b className="text-xs">{s.name}</b>
+                <p className="tiny muted mt-2">
+                  Region: {s.region} · Verification pending
+                </p>
               </div>
-            ))}
-            {SUPPLIERS.every((s) => s.verified) && <p className="text-neutral-500">No pending requests.</p>}
-          </div>
-        </div>
-        <div className="card p-4">
-          <p className="mb-2 font-semibold text-primary-800">System / RUL Service Status</p>
-          <div className="flex items-center gap-2 text-sm">
-            <span className="h-2.5 w-2.5 rounded-full bg-success" />
-            RUL prediction service — Operational
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+              <Button onClick={() => action("supplier:toggle", {
+          id: s.id
+        })}>
+                Approve supplier
+              </Button>
+            </div>)}
+        {db.suppliers.every(s => s.verified) && <p className="muted">No pending supplier requests.</p>}
+      </section>
+    </div>;
 }

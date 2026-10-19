@@ -1,55 +1,52 @@
-import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { engineApi } from "../../services/engineApi";
-import { rulApi } from "../../services/rulApi";
-import UrgencyBadge from "../../components/engine/UrgencyBadge";
-import RULTrendChart from "../../components/engine/RULTrendChart";
-import Breadcrumb from "../../components/common/Breadcrumb";
-import { formatDate } from "../../utils/format";
-
+import { API_MODE } from "../../services/config";
+import useRecords from "../../hooks/useRecords";
+import Title from "../../components/common/PageTitle";
+import State from "../../components/common/QueryState";
+import Notice from "../../components/common/Notice";
+import Empty from "../../components/common/EmptyState";
+import Urgency from "../../components/common/Urgency";
+import date from "../../utils/date";
+import Trend from "../../components/engine/RULTrendChart";
 export default function EngineDetail() {
-  const { id } = useParams();
-  const [engine, setEngine] = useState(null);
-  const [history, setHistory] = useState([]);
-
-  useEffect(() => {
-    engineApi.getById(id).then(setEngine);
-    rulApi.getHistory(id).then(setHistory);
-  }, [id]);
-
-  if (!engine) return <p className="text-sm text-neutral-500">Loading engine…</p>;
-
-  return (
-    <div className="space-y-6">
-      <Breadcrumb items={[{ label: "My Engines", to: "/buyer/engines" }, { label: engine.id }]} />
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="mono text-xl font-semibold text-primary-800">{engine.id}</h1>
-          <p className="text-sm text-neutral-500">{engine.model} · Cycle {engine.currentCycle.toLocaleString()}</p>
-        </div>
-        <UrgencyBadge urgency={engine.urgency} />
-      </div>
-
-      <div className="card p-4">
-        <p className="mb-1 font-semibold text-primary-800">Latest Prediction</p>
-        <p className="mono text-3xl font-bold text-primary-800">{engine.latestRul} <span className="text-sm font-normal text-neutral-500">cycles remaining</span></p>
-        <p className="mt-1 text-sm text-neutral-500">Last analysis: {formatDate(engine.lastAnalysis)}</p>
-      </div>
-
-      <div className="card p-4">
-        <p className="mb-3 font-semibold text-primary-800">RUL History</p>
-        <RULTrendChart data={history} />
-      </div>
-
-      <div className="card p-4">
-        <p className="mb-2 font-semibold text-primary-800">Sensor Upload History</p>
-        <p className="text-sm text-neutral-500">Last CSV uploaded on {formatDate(engine.lastAnalysis)}.</p>
-      </div>
-
-      <div className="flex gap-3">
-        <Link to={`/buyer/rul-analysis?engine=${engine.id}`} className="btn-secondary">Run New Analysis</Link>
-        <Link to={`/buyer/recommendations?engine=${engine.id}`} className="btn-primary">View Replacement Recommendations</Link>
-      </div>
-    </div>
-  );
+  const {
+    id
+  } = useParams();
+  const engines = useRecords("engines");
+  const history = useRecords("history", id);
+  const e = engines.data?.find(e => e.id === id);
+  return <div className="page">
+      <State query={engines}>
+        {!e ? <Empty title="Engine not found" text="This engine is not in your fleet." link="/buyer/engines" action="Back to fleet" /> : <>
+            <Title eyebrow={"MY ENGINES / " + e.model} title={e.id} description={"Current cycle " + e.currentCycle?.toLocaleString()} action={<Urgency value={e.urgency} prominent />} />
+            <section className="card p-6">
+              <p className="eyebrow">LATEST PREDICTED RUL</p>
+              <p className="mono text-4xl font-semibold my-4">
+                {e.latestRul ?? "—"}{" "}
+                <span className="text-sm muted">cycles</span>
+              </p>
+              <p className="tiny muted">
+                Latest analysis: {date(e.lastAnalysis)}
+              </p>
+            </section>
+            <section className="card p-6 min-w-0">
+              <h2 className="mb-5">RUL history</h2>
+              <State query={history}>
+                <Trend data={history.data || []} />
+              </State>
+            </section>
+            <Notice>
+              {API_MODE ? "Sensor history and inference results are supplied by the backend." : "Sample engine history. No live sensor source or ML model is connected in demo mode."}
+            </Notice>
+            <div className="flex flex-wrap gap-3">
+              <Link className="btn btn-secondary" to={"/buyer/rul-analysis?engine=" + id}>
+                Run new analysis
+              </Link>
+              <Link className="btn btn-primary" to={"/buyer/recommendations?engine=" + id}>
+                View replacement options
+              </Link>
+            </div>
+          </>}
+      </State>
+    </div>;
 }

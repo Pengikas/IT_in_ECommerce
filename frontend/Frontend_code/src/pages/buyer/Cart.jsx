@@ -1,58 +1,85 @@
 import { Link } from "react-router-dom";
-import { useCart } from "../../hooks/useCart";
-import { formatCurrency } from "../../utils/format";
-import EmptyState from "../../components/common/EmptyState";
-
+import useApp from "../../hooks/useApp";
+import useRecords from "../../hooks/useRecords";
+import { API_MODE } from "../../services/config";
+import ProductArt from "../../components/marketplace/ProductArt";
+import Icon from "../../components/common/Icon";
+import Title from "../../components/common/PageTitle";
+import State from "../../components/common/QueryState";
+import Empty from "../../components/common/EmptyState";
+import Button from "../../components/common/Button";
+import Field from "../../components/common/Field";
+import Notice from "../../components/common/Notice";
+import money from "../../utils/money";
 export default function Cart() {
-  const { items, updateQuantity, removeItem, subtotal } = useCart();
-
-  if (items.length === 0) {
-    return (
-      <EmptyState
-        title="Your cart is empty"
-        description="Browse the marketplace or check your replacement recommendations to add parts."
-        action={<Link to="/marketplace" className="btn-primary">Go to Marketplace</Link>}
-      />
-    );
-  }
-
-  return (
-    <div className="space-y-6">
-      <h1 className="text-xl font-semibold text-primary-800">Cart</h1>
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-        <div className="card divide-y divide-neutral-200">
-          {items.map(({ product, quantity }) => (
-            <div key={product.id} className="flex flex-wrap items-center gap-4 p-4">
-              <div className="flex h-16 w-16 items-center justify-center rounded-[10px] bg-neutral-100 text-2xl">✈️</div>
-              <div className="min-w-[180px] flex-1">
-                <p className="font-medium text-primary-800">{product.name}</p>
-                <p className="mono text-xs text-neutral-500">{product.partNumber}</p>
-              </div>
-              <input
-                type="number"
-                min={1}
-                className="input !w-20"
-                value={quantity}
-                onChange={(e) => updateQuantity(product.id, Number(e.target.value))}
-              />
-              <p className="w-28 text-right font-medium text-primary-800">
-                {formatCurrency(product.price * quantity, product.currency)}
+  const query = useRecords("cart");
+  const {
+    action,
+    flash
+  } = useApp();
+  const items = query.data || [];
+  return <div className="page">
+      <Title eyebrow="PROCUREMENT / CART" title={`Your cart (${items.reduce((s, i) => s + i.quantity, 0)} items)`} description="Review your selected components before checkout." action={<Link className="btn btn-secondary" to="/marketplace">
+            Continue sourcing →
+          </Link>} />
+      <State query={query}>
+        {!items.length ? <Empty title="Your next mission starts here" text="Your cart is empty. Explore the catalog to find compatible components." /> : <div className="purchase-layout">
+            <section className="card p-5">
+              {items.map(item => <div key={item.id} className="cart-row">
+                  <ProductArt product={item.product} className="w-24 h-24 rounded shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <Link className="text-xs font-semibold" to={"/products/" + item.product.id}>
+                      {item.product.name}
+                    </Link>
+                    <p className="tiny mono muted my-2">
+                      {item.product.partNumber}
+                    </p>
+                    <p className="tiny text-success">
+                      {item.product.stock} available · {item.product.condition}
+                    </p>
+                    <Button tone="ghost" className="compact text-critical mt-2" onClick={() => action("cart:remove", {
+                id: item.id
+              })}>
+                      Remove
+                    </Button>
+                  </div>
+                  <div className="cart-price">
+                    <b className="mono text-xs">
+                      {money(item.product.price * item.quantity)}
+                    </b>
+                    <Field label="Quantity">
+                      <input aria-label={"Quantity " + item.product.name} className="input w-20" type="number" min="1" max={item.product.stock} value={item.quantity} onChange={e => {
+                  const quantity = Number(e.target.value);
+                  if (Number.isInteger(quantity) && quantity > 0) action("cart:update", {
+                    id: item.id,
+                    quantity
+                  }).catch(e => flash(e.message, true));
+                }} />
+                    </Field>
+                  </div>
+                </div>)}
+            </section>
+            <aside className="card p-6 h-fit">
+              <h2 className="mb-6">Order summary</h2>
+              <p className="flex justify-between text-xs mb-4">
+                <span>Subtotal</span>
+                <b className="mono">
+                  {money(items.reduce((s, i) => s + i.product.price * i.quantity, 0))}
+                </b>
               </p>
-              <button className="text-sm text-critical hover:underline" onClick={() => removeItem(product.id)}>
-                Remove
-              </button>
-            </div>
-          ))}
-        </div>
-        <div className="card h-fit p-4">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-neutral-500">Subtotal</span>
-            <span className="font-semibold text-primary-800">{formatCurrency(subtotal)}</span>
-          </div>
-          <p className="mt-1 text-xs text-neutral-500">Shipping & tax calculated at checkout.</p>
-          <Link to="/buyer/checkout" className="btn-primary mt-4 w-full">Proceed to Checkout</Link>
-        </div>
-      </div>
-    </div>
-  );
+              <p className="tiny muted mb-5">
+                Shipping calculated at checkout.
+              </p>
+              <Link className="btn btn-primary w-full" to="/buyer/checkout">
+                Proceed to checkout <Icon name="arrow" size={14} />
+              </Link>
+              <div className="mt-5">
+                <Notice>
+                  {API_MODE ? "The server revalidates stock and final prices." : "Demo procurement · No real charge."}
+                </Notice>
+              </div>
+            </aside>
+          </div>}
+      </State>
+    </div>;
 }

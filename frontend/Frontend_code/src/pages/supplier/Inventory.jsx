@@ -1,35 +1,46 @@
-import { useEffect, useState } from "react";
-import { useAuth } from "../../hooks/useAuth";
-import { productApi } from "../../services/productApi";
-import DataTable from "../../components/common/DataTable";
-
+import { useState } from "react";
+import useApp from "../../hooks/useApp";
+import useRecords from "../../hooks/useRecords";
+import Title from "../../components/common/PageTitle";
+import State from "../../components/common/QueryState";
+import Table from "../../components/common/DataTable";
+import Button from "../../components/common/Button";
 export default function Inventory() {
-  const { user } = useAuth();
-  const [products, setProducts] = useState([]);
-
-  useEffect(() => {
-    productApi.listBySupplier(user?.id).then(setProducts);
-  }, [user]);
-
-  const columns = [
-    { key: "name", header: "Product" },
-    { key: "partNumber", header: "Part Number", render: (r) => <span className="mono text-xs">{r.partNumber}</span> },
-    {
-      key: "stock",
-      header: "Stock Quantity",
-      render: (r) => <input type="number" className="input !w-24" defaultValue={r.stock} />,
-    },
-    { key: "save", header: "", render: () => <button className="btn-secondary text-xs">Update</button> },
-  ];
-
-  return (
-    <div className="space-y-4">
-      <h1 className="text-xl font-semibold text-primary-800">Inventory</h1>
-      <p className="text-sm text-neutral-500">
-        Manage stock quantity for your marketplace listings. Upstream procurement, warehouse transfer, and goods
-        receipt are out of scope for this marketplace.
-      </p>
-      <DataTable columns={columns} rows={products} rowKey="id" />
-    </div>
-  );
+  const query = useRecords("listings");
+  const {
+    action,
+    flash
+  } = useApp();
+  const [draft, setDraft] = useState({});
+  return <div className="page">
+      <Title eyebrow="SUPPLIER / INVENTORY" title="Inventory" description="Keep marketplace stock accurate and ready for procurement." />
+      <State query={query}>
+        <Table rows={query.data || []} columns={[{
+        key: "name",
+        label: "Component"
+      }, {
+        key: "partNumber",
+        label: "Part number"
+      }, {
+        key: "stock",
+        label: "Available units",
+        render: p => <input className="input w-24" type="number" min="0" step="1" aria-label={"Stock for " + p.name} value={draft[p.id] ?? p.stock} onChange={e => setDraft({
+          ...draft,
+          [p.id]: e.target.value
+        })} />
+      }, {
+        key: "action",
+        label: "Action",
+        render: p => <Button tone="secondary" onClick={async () => {
+          await action("stock:update", {
+            id: p.id,
+            stock: Number(draft[p.id] ?? p.stock)
+          });
+          flash("Stock updated for " + p.partNumber);
+        }}>
+                  Update stock
+                </Button>
+      }]} />
+      </State>
+    </div>;
 }

@@ -1,39 +1,48 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useAuth } from "../../hooks/useAuth";
-import { productApi } from "../../services/productApi";
-import DataTable from "../../components/common/DataTable";
+import useRecords from "../../hooks/useRecords";
+import Title from "../../components/common/PageTitle";
+import State from "../../components/common/QueryState";
+import Table from "../../components/common/DataTable";
 import Badge from "../../components/common/Badge";
-import { formatCurrency } from "../../utils/format";
-
-export default function SupplierProducts() {
-  const { user } = useAuth();
-  const [products, setProducts] = useState([]);
-
-  useEffect(() => {
-    productApi.listBySupplier(user?.id).then(setProducts);
-  }, [user]);
-
-  const columns = [
-    { key: "name", header: "Product", render: (r) => <span className="font-medium text-primary-800">{r.name}</span> },
-    { key: "partNumber", header: "Part Number", render: (r) => <span className="mono text-xs">{r.partNumber}</span> },
-    { key: "price", header: "Price", render: (r) => formatCurrency(r.price, r.currency) },
-    { key: "stock", header: "Stock" },
-    { key: "status", header: "Status", render: () => <Badge tone="success">Active</Badge> },
-    {
-      key: "action",
-      header: "Action",
-      render: (r) => <Link to={`/supplier/products/${r.id}/edit`} className="text-sm font-medium text-accent">Edit</Link>,
-    },
-  ];
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-primary-800">Products</h1>
-        <Link to="/supplier/products/new" className="btn-primary">Add Product</Link>
-      </div>
-      <DataTable columns={columns} rows={products} rowKey="id" emptyLabel="No products listed yet" />
-    </div>
-  );
+import money from "../../utils/money";
+export default function Products() {
+  const query = useRecords("listings");
+  const [search, setSearch] = useState("");
+  const rows = (query.data || []).filter(p => (p.name + p.partNumber).toLowerCase().includes(search.toLowerCase()));
+  return <div className="page">
+      <Title eyebrow="SUPPLIER / PRODUCT CATALOG" title="Products" description="Manage your component listings and seller offers." action={<Link className="btn btn-primary" to="/supplier/products/new">
+            Add product
+          </Link>} />
+      <input aria-label="Search listings" className="input max-w-md" placeholder="Search product or part number…" value={search} onChange={e => setSearch(e.target.value)} />
+      <State query={query}>
+        <Table rows={rows} columns={[{
+        key: "name",
+        label: "Component"
+      }, {
+        key: "partNumber",
+        label: "Part number",
+        render: p => <span className="mono tiny">{p.partNumber}</span>
+      }, {
+        key: "price",
+        label: "Unit price",
+        render: p => money(p.price)
+      }, {
+        key: "stock",
+        label: "Stock"
+      }, {
+        key: "status",
+        label: "Status",
+        render: p => <Badge tone={p.status === "Active" ? "success" : ""}>
+                  {p.status || "Active"}
+                </Badge>
+      }, {
+        key: "action",
+        label: "Action",
+        render: p => <Link className="text-accent" to={`/supplier/products/${p.id}/edit`}>
+                  Edit listing →
+                </Link>
+      }]} />
+      </State>
+    </div>;
 }

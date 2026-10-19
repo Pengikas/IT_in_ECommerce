@@ -1,17 +1,2 @@
-import { Outlet } from "react-router-dom";
-import { AppHeader } from "../components/common/Header";
-import Sidebar from "../components/common/Sidebar";
-
-export default function SupplierLayout() {
-  return (
-    <div className="min-h-screen bg-neutral-50">
-      <AppHeader />
-      <div className="flex">
-        <Sidebar role="supplier" />
-        <main className="min-w-0 flex-1 p-4 md:p-6">
-          <Outlet />
-        </main>
-      </div>
-    </div>
-  );
-}
+import WorkspaceLayout from "./WorkspaceLayout";
+export default function SupplierLayout() { return <WorkspaceLayout role="supplier" />; }

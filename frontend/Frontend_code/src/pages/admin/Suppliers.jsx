@@ -1,27 +1,42 @@
-import { SUPPLIERS } from "../../services/mockData";
-import DataTable from "../../components/common/DataTable";
+import useApp from "../../hooks/useApp";
+import Title from "../../components/common/PageTitle";
+import Table from "../../components/common/DataTable";
+import Button from "../../components/common/Button";
+import Notice from "../../components/common/Notice";
 import Badge from "../../components/common/Badge";
-
-export default function AdminSuppliers() {
-  const columns = [
-    { key: "name", header: "Supplier" },
-    { key: "region", header: "Region" },
-    { key: "rating", header: "Rating" },
-    { key: "verified", header: "Status", render: (r) => <Badge tone={r.verified ? "success" : "warning"}>{r.verified ? "Verified" : "Pending"}</Badge> },
-    {
+export default function Suppliers() {
+  const {
+    db,
+    action
+  } = useApp();
+  return <div className="page">
+      <Title eyebrow="ADMIN / PARTNER NETWORK" title="Supplier verification" description="Review partners and maintain a trusted marketplace." />
+      <Notice>
+        These actions change local demo verification records only.
+      </Notice>
+      <Table rows={db.suppliers} columns={[{
+      key: "name",
+      label: "Business name"
+    }, {
+      key: "region",
+      label: "Region"
+    }, {
+      key: "rating",
+      label: "Demo rating"
+    }, {
+      key: "verified",
+      label: "Verification",
+      render: r => <Badge tone={r.verified ? "success" : "warn"}>
+                {r.verified ? "Verified" : "Pending / suspended"}
+              </Badge>
+    }, {
       key: "action",
-      header: "Action",
-      render: (r) => (
-        <div className="flex gap-2">
-          <button className="btn-secondary !px-2 !py-1 text-xs">{r.verified ? "Suspend" : "Approve"}</button>
-        </div>
-      ),
-    },
-  ];
-  return (
-    <div className="space-y-4">
-      <h1 className="text-xl font-semibold text-primary-800">Suppliers</h1>
-      <DataTable columns={columns} rows={SUPPLIERS} rowKey="id" />
-    </div>
-  );
+      label: "Action",
+      render: r => <Button tone="secondary" onClick={() => action("supplier:toggle", {
+        id: r.id
+      })}>
+                {r.verified ? "Suspend" : "Approve supplier"}
+              </Button>
+    }]} />
+    </div>;
 }

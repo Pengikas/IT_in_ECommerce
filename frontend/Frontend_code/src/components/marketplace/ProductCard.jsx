@@ -1,55 +1,50 @@
 import { Link } from "react-router-dom";
-import Badge from "../common/Badge";
-import PriceBlock from "./PriceBlock";
-import SupplierBadge from "./SupplierBadge";
-
-const STOCK_TONE = { "In stock": "success", "Low stock": "warning", "Out of stock": "critical" };
-
-function stockLabel(stock) {
-  if (stock <= 0) return "Out of stock";
-  if (stock <= 5) return "Low stock";
-  return "In stock";
-}
-
-export default function ProductCard({ product, onAddToCart }) {
-  const stock = stockLabel(product.stock);
-  return (
-    <div className="card flex flex-col overflow-hidden">
-      <Link to={`/products/${product.id}`} className="flex h-36 items-center justify-center bg-neutral-100 text-4xl">
-        ✈️
-      </Link>
-      <div className="flex flex-1 flex-col gap-2 p-4">
-        <div className="flex items-start justify-between gap-2">
-          <Link to={`/products/${product.id}`} className="text-sm font-semibold text-primary-800 hover:text-accent">
-            {product.name}
-          </Link>
-          <Badge tone={STOCK_TONE[stock]}>{stock}</Badge>
+import useWishlist from "../../hooks/useWishlist";
+import ProductArt from "./ProductArt";
+import Icon from "../common/Icon";
+import Button from "../common/Button";
+import money from "../../utils/money";
+import useAddCart from "../../hooks/useAddCart";
+export default function ProductCard({
+  product: p,
+  context = ""
+}) {
+  const wish = useWishlist();
+  const add = useAddCart();
+  return <article className="card product-card">
+      <div className="product-image">
+        <Link to={`/products/${p.id}${context}`}>
+          <ProductArt product={p} className="h-44" />
+        </Link>
+        <button className={"save-button " + (wish.ids.includes(p.id) ? "saved" : "")} aria-label={(wish.ids.includes(p.id) ? "Remove from" : "Add to") + " wishlist: " + p.name} aria-pressed={wish.ids.includes(p.id)} onClick={() => wish.toggle(p.id)}>
+          <Icon name="heart" size={16} />
+        </button>
+        <span className="image-label">{p.condition || "Available offers"}</span>
+      </div>
+      <div className="product-content">
+        <p className="eyebrow">{p.compatibility.join(" / ")}</p>
+        <h3>
+          <Link to={`/products/${p.id}${context}`}>{p.name}</Link>
+        </h3>
+        <p className="mono tiny muted">P/N {p.partNumber}</p>
+        <p className="tiny muted flex items-center gap-1">
+          {p.supplier?.verified && <Icon name="shield" size={12} />}{" "}
+          {p.supplier?.name || "Select supplier offer"}
+        </p>
+        <div className="flex justify-between tiny my-1">
+          <span className={p.stock ? "text-success" : "text-critical"}>
+            {p.stock ? `${p.stock} in stock` : "No stock available"}
+          </span>
+          <span>
+            {p.deliveryDays ? p.deliveryDays + "-day delivery" : "Contact supplier"}
+          </span>
         </div>
-        <p className="mono text-xs text-neutral-500">{product.partNumber}</p>
-        <SupplierBadge supplier={product.supplier} />
-        <div className="flex flex-wrap gap-1">
-          {product.compatibility.map((c) => (
-            <span key={c} className="mono rounded-md bg-neutral-100 px-1.5 py-0.5 text-[11px] text-primary-800">
-              {c}
-            </span>
-          ))}
-        </div>
-        <div className="mt-auto flex items-center justify-between pt-2">
-          <PriceBlock price={product.price} currency={product.currency} />
-          <div className="flex gap-2">
-            <Link to={`/products/${product.id}`} className="btn-secondary !px-3 !py-1.5 text-xs">
-              View
-            </Link>
-            <button
-              className="btn-primary !px-3 !py-1.5 text-xs"
-              onClick={() => onAddToCart?.(product)}
-              disabled={product.stock <= 0}
-            >
-              Add to Cart
-            </button>
-          </div>
+        <div className="product-bottom">
+          <strong className="mono">{money(p.price)}</strong>
+          <Button disabled={!p.stock} onClick={() => add(p)} className="compact">
+            <Icon name="cart" size={12} /> Add to cart
+          </Button>
         </div>
       </div>
-    </div>
-  );
+    </article>;
 }

@@ -1,59 +1,106 @@
-import { useEffect, useState } from "react";
-import { useParams, useSearchParams } from "react-router-dom";
-import { orderApi } from "../../services/orderApi";
-import OrderStatusTimeline from "../../components/order/OrderStatusTimeline";
-import Breadcrumb from "../../components/common/Breadcrumb";
-import { formatCurrency, formatDate } from "../../utils/format";
-
+import OrderBusinessDetails from "../../components/order/OrderBusinessDetails";
+import Field from "../../components/common/Field";
+import { Link, useParams, useSearchParams } from "react-router-dom";
+import useApp from "../../hooks/useApp";
+import useRecords from "../../hooks/useRecords";
+import { API_MODE } from "../../services/config";
+import ProductArt from "../../components/marketplace/ProductArt";
+import Title from "../../components/common/PageTitle";
+import State from "../../components/common/QueryState";
+import Empty from "../../components/common/EmptyState";
+import Button from "../../components/common/Button";
+import Form from "../../components/common/Form";
+import Notice from "../../components/common/Notice";
+import Timeline from "../../components/order/OrderStatusTimeline";
+import money from "../../utils/money";
+import date from "../../utils/date";
 export default function OrderDetail() {
-  const { id } = useParams();
+  const {
+    id
+  } = useParams();
   const [params] = useSearchParams();
-  const [order, setOrder] = useState(null);
-
-  useEffect(() => {
-    orderApi.getById(id).then(setOrder);
-  }, [id]);
-
-  if (!order) return <p className="text-sm text-neutral-500">Loading order…</p>;
-
-  return (
-    <div className="space-y-6">
-      <Breadcrumb items={[{ label: "Orders", to: "/buyer/orders" }, { label: order.id }]} />
-
-      {params.get("justPlaced") && (
-        <div className="card border-success/30 bg-success/5 p-4 text-sm text-success">
-          Order placed successfully. You'll get shipment updates as the supplier processes it.
-        </div>
-      )}
-
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-semibold text-primary-800">{order.id}</h1>
-        <span className="text-sm text-neutral-500">Placed {formatDate(order.placedAt)}</span>
-      </div>
-
-      <div className="card p-4">
-        <OrderStatusTimeline status={order.status} />
-      </div>
-
-      <div className="card divide-y divide-neutral-200">
-        {order.items.map((item) => (
-          <div key={item.productId} className="flex items-center justify-between p-4 text-sm">
-            <div>
-              <p className="font-medium text-primary-800">{item.product?.name}</p>
-              <p className="text-neutral-500">Qty {item.quantity}</p>
+  const query = useRecords("order", id);
+  const {
+    db, user,
+    action
+  } = useApp();
+  const o = query.data;
+  return <div className="page">
+      <State query={query}>
+        {!o ? <Empty title="Order not found" text="The requested order is not available." link="/buyer/orders" action="Back to orders" /> : <>
+            {params.get("justPlaced") && <Notice success>
+                {API_MODE ? "Order accepted by the backend. Totals and status below come from the server." : "Order placed successfully. This demo order is saved in your browser; no real payment was made."}
+              </Notice>}
+            <Title eyebrow="BUYER / PROCUREMENT ORDER" title={o.id} description={"Placed " + date(o.placedAt) + " · " + o.status} action={<Link className="btn btn-secondary" to="/buyer/orders">
+                  ← All orders
+                </Link>} />
+            {o.sampleRecord && <Notice>Sample order: company, tax reference and invoice details are illustrative demo data.</Notice>}
+            <section className="card p-6">
+              <h2 className="mb-6">Order status</h2>
+              <Timeline status={o.status} />
+            </section>
+            <div className="purchase-layout">
+              <section className="card p-6">
+                <h2 className="mb-5">Order details</h2>
+                {o.items.map((item, index) => <div className="cart-row" key={item.orderItemId || item.listingId || index}>
+                    <ProductArt product={item.product} className="w-24 h-20 rounded shrink-0" />
+                    <div className="flex-1">
+                      <Link className="text-xs font-semibold" to={"/products/" + item.productId}>
+                        {item.product?.name || item.product?.productName || item.productId}
+                      </Link>
+                      <p className="tiny muted mt-2">
+                        Quantity {item.quantity} · P/N{" "}
+                        {item.product?.partNumber}
+                      </p>
+                    </div>
+                    <b className="mono text-xs">
+                      {money(item.price * item.quantity)}
+                    </b>
+                  </div>)}
+                {o.tax == null && <p className="tiny muted mt-4">Tax has not been quoted. The seller must confirm tax on the invoice; it is not assumed to be zero.</p>}
+                <div className="summary-lines">
+                  {o.shipping !== undefined && <p>
+                      <span>Shipping</span>
+                      <span>{money(o.shipping)}</span>
+                    </p>}
+                  {o.tax != null && <p><span>Tax</span><span>{money(o.tax)}</span></p>}
+                  <p className="summary-total">
+                    <span>Total order value</span>
+                    <strong className="mono">{money(o.total)}</strong>
+                  </p>
+                </div>
+              </section>
+              <aside className="card p-6 h-fit">
+                <h2 className="text-sm mb-5">Delivery & payment</h2>
+                <OrderBusinessDetails order={o} />
+              </aside>
             </div>
-            <p className="font-medium text-primary-800">{formatCurrency(item.price * item.quantity)}</p>
-          </div>
-        ))}
-        <div className="flex items-center justify-between p-4 font-semibold text-primary-800">
-          <span>Total</span>
-          <span>{formatCurrency(order.total)}</span>
-        </div>
-      </div>
-
-      <div className="card p-4 text-sm text-neutral-500">
-        Need help with this order? Contact support or request a cancellation/refund from here.
-      </div>
-    </div>
-  );
+            {Object.values(o.sellerShipments || {}).some(s => s.trackingNumber) && <section className="card p-6"><h2>Shipment tracking</h2>{Object.entries(o.sellerShipments).map(([sellerId, shipment]) => <p className="muted mt-3" key={sellerId}>{shipment.carrier} · {shipment.trackingNumber}</p>)}</section>}
+            {!API_MODE && <section className="card p-6">
+                <h2>Need help with this order?</h2>
+                <p className="muted mt-2 mb-5">
+                  Record a support request in the local demo. No external
+                  message will be sent.
+                </p>
+                {db.support.some(r => r.orderId === id && r.userId === user.id) ? <Notice success>
+                    Your demo support request has been recorded locally.
+                  </Notice> : <Form className="support-form" onSubmit={data => action("support:add", {
+            orderId: id,
+            type: data.get("type"),
+            reason: data.get("reason")
+          })}>
+                    <Field label="Request type"><select className="input" name="type">
+                      <option>Order enquiry</option>
+                      {!["Shipped", "Delivered"].includes(o.status) && <option>Cancellation request</option>}
+                      {o.status === "Delivered" && <option>Return / refund request</option>}
+                    </select></Field>
+                    <Field label="Support request details"><input className="input" aria-label="Support request details" name="reason" required placeholder="Tell us how we can help…" /></Field>
+                    <Button type="submit" tone="secondary">
+                      Save request
+                    </Button>
+                  </Form>}
+              </section>}
+          </>}
+      </State>
+    </div>;
 }
