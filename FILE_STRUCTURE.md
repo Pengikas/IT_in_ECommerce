@@ -1,7 +1,5 @@
 # Cấu trúc và mục đích từng file AeroRUL frontend
 
-Tài liệu này mô tả **source hiện tại trong workspace**. Mỗi trang là một file; layout, component, hook, dữ liệu mẫu và nghiệp vụ được tách theo trách nhiệm. Không có bản FE thứ hai chạy song song. Đây là tổ chức lại bản hiện có theo cấu trúc chi tiết, không phải xác nhận phục hồi nguyên byte một working tree cũ đã mất.
-
 ## Luồng dữ liệu
 
 `main.jsx → AppProvider → App.jsx → ProtectedRoute/layout → page → hook → demo query/command hoặc services/api.js → component`.
@@ -11,120 +9,119 @@ Trong demo, `database.js` tạo dữ liệu từ `data/mock/` **khi chưa có DB
 ## Cây thư mục đầy đủ
 
 ```text
-aviation-rul-fe/
-└── src/
-    ├── app/
-    │   ├── providers/
-    │   │   ├── AppContext.js
-    │   │   └── AppProvider.jsx
-    │   ├── routes/
-    │   └── navigation.js
-    ├── components/
-    │   ├── charts/
-    │   │   └── SalesChart.jsx
-    │   ├── common/
-    │   │   ├── Badge.jsx
-    │   │   ├── Button.jsx
-    │   │   ├── DataTable.jsx
-    │   │   ├── EmptyState.jsx
-    │   │   ├── Field.jsx
-    │   │   ├── Form.jsx
-    │   │   ├── Header.jsx
-    │   │   ├── Icon.jsx
-    │   │   ├── Loading.jsx
-    │   │   ├── Logo.jsx
-    │   │   ├── Notice.jsx
-    │   │   ├── PageTitle.jsx
-    │   │   ├── QueryState.jsx
-    │   │   ├── Sidebar.jsx
-    │   │   ├── StatsGrid.jsx
-    │   │   └── Urgency.jsx
-    │   ├── engine/
-    │   │   └── RULTrendChart.jsx
-    │   ├── marketplace/
-    │   │   ├── ProductArt.jsx
-    │   │   └── ProductCard.jsx
-    │   └── order/
-    │       ├── CartDrawer.jsx
-    │       ├── CheckoutStepper.jsx
-    │       └── OrderStatusTimeline.jsx
-    ├── data/
-    │   └── mock/
-    │       ├── catalog.js
-    │       ├── fleet.js
-    │       ├── notifications.js
-    │       ├── orders.js
-    │       ├── reports.js
-    │       └── users.js
-    ├── hooks/
-    │   ├── useAddCart.js
-    │   ├── useApp.js
-    │   ├── useRecords.js
-    │   └── useWishlist.js
-    ├── layouts/
-    │   ├── AdminLayout.jsx
-    │   ├── BuyerLayout.jsx
-    │   ├── PublicLayout.jsx
-    │   ├── SupplierLayout.jsx
-    │   └── WorkspaceLayout.jsx
-    ├── pages/
-    │   ├── admin/
-    │   │   ├── Categories.jsx
-    │   │   ├── Companies.jsx
-    │   │   ├── Dashboard.jsx
-    │   │   ├── Orders.jsx
-    │   │   ├── Products.jsx
-    │   │   ├── Reports.jsx
-    │   │   ├── Suppliers.jsx
-    │   │   ├── SystemStatus.jsx
-    │   │   └── Users.jsx
-    │   ├── buyer/
-    │   │   ├── Cart.jsx
-    │   │   ├── Checkout.jsx
-    │   │   ├── Dashboard.jsx
-    │   │   ├── EngineDetail.jsx
-    │   │   ├── MyEngines.jsx
-    │   │   ├── Notifications.jsx
-    │   │   ├── OrderDetail.jsx
-    │   │   ├── Orders.jsx
-    │   │   ├── RULAnalysis.jsx
-    │   │   ├── Recommendations.jsx
-    │   │   └── Wishlist.jsx
-    │   ├── public/
-    │   │   ├── Home.jsx
-    │   │   ├── HowItWorks.jsx
-    │   │   ├── Login.jsx
-    │   │   ├── Marketplace.jsx
-    │   │   ├── ProductDetail.jsx
-    │   │   └── Register.jsx
-    │   ├── shared/
-    │   │   ├── AccountSettings.jsx
-    │   │   └── BusinessProfile.jsx
-    │   └── supplier/
-    │       ├── Analytics.jsx
-    │       ├── Dashboard.jsx
-    │       ├── Inventory.jsx
-    │       ├── Orders.jsx
-    │       ├── ProductForm.jsx
-    │       ├── Products.jsx
-    │       └── Reviews.jsx
-    ├── routes/
-    │   └── ProtectedRoute.jsx
-    ├── services/
-    │   ├── demo/
-    │   │   ├── auth.js
-    │   │   ├── commands.js
-    │   │   ├── database.js
-    │   │   └── queries.js
-    │   ├── api.js
-    │   └── config.js
-    ├── utils/
-    │   ├── date.js
-    │   ├── money.js
-    │   └── orderStages.js
-    ├── App.jsx
-    ├── index.css
-    └── main.jsx
+src/
+├── app/
+│   ├── providers/
+│   │   ├── AppContext.js
+│   │   └── AppProvider.jsx
+│   ├── routes/
+│   └── navigation.js
+├── components/
+│   ├── charts/
+│   │   └── SalesChart.jsx
+│   ├── common/
+│   │   ├── Badge.jsx
+│   │   ├── Button.jsx
+│   │   ├── DataTable.jsx
+│   │   ├── EmptyState.jsx
+│   │   ├── Field.jsx
+│   │   ├── Form.jsx
+│   │   ├── Header.jsx
+│   │   ├── Icon.jsx
+│   │   ├── Loading.jsx
+│   │   ├── Logo.jsx
+│   │   ├── Notice.jsx
+│   │   ├── PageTitle.jsx
+│   │   ├── QueryState.jsx
+│   │   ├── Sidebar.jsx
+│   │   ├── StatsGrid.jsx
+│   │   └── Urgency.jsx
+│   ├── engine/
+│   │   └── RULTrendChart.jsx
+│   ├── marketplace/
+│   │   ├── ProductArt.jsx
+│   │   └── ProductCard.jsx
+│   └── order/
+│       ├── CartDrawer.jsx
+│       ├── CheckoutStepper.jsx
+│       └── OrderStatusTimeline.jsx
+├── data/
+│   └── mock/
+│       ├── catalog.js
+│       ├── fleet.js
+│       ├── notifications.js
+│       ├── orders.js
+│       ├── reports.js
+│       └── users.js
+├── hooks/
+│   ├── useAddCart.js
+│   ├── useApp.js
+│   ├── useRecords.js
+│   └── useWishlist.js
+├── layouts/
+│   ├── AdminLayout.jsx
+│   ├── BuyerLayout.jsx
+│   ├── PublicLayout.jsx
+│   ├── SupplierLayout.jsx
+│   └── WorkspaceLayout.jsx
+├── pages/
+│   ├── admin/
+│   │   ├── Categories.jsx
+│   │   ├── Companies.jsx
+│   │   ├── Dashboard.jsx
+│   │   ├── Orders.jsx
+│   │   ├── Products.jsx
+│   │   ├── Reports.jsx
+│   │   ├── Suppliers.jsx
+│   │   ├── SystemStatus.jsx
+│   │   └── Users.jsx
+│   ├── buyer/
+│   │   ├── Cart.jsx
+│   │   ├── Checkout.jsx
+│   │   ├── Dashboard.jsx
+│   │   ├── EngineDetail.jsx
+│   │   ├── MyEngines.jsx
+│   │   ├── Notifications.jsx
+│   │   ├── OrderDetail.jsx
+│   │   ├── Orders.jsx
+│   │   ├── RULAnalysis.jsx
+│   │   ├── Recommendations.jsx
+│   │   └── Wishlist.jsx
+│   ├── public/
+│   │   ├── Home.jsx
+│   │   ├── HowItWorks.jsx
+│   │   ├── Login.jsx
+│   │   ├── Marketplace.jsx
+│   │   ├── ProductDetail.jsx
+│   │   └── Register.jsx
+│   ├── shared/
+│   │   ├── AccountSettings.jsx
+│   │   └── BusinessProfile.jsx
+│   └── supplier/
+│       ├── Analytics.jsx
+│       ├── Dashboard.jsx
+│       ├── Inventory.jsx
+│       ├── Orders.jsx
+│       ├── ProductForm.jsx
+│       ├── Products.jsx
+│       └── Reviews.jsx
+├── routes/
+│   └── ProtectedRoute.jsx
+├── services/
+│   ├── demo/
+│   │   ├── auth.js
+│   │   ├── commands.js
+│   │   ├── database.js
+│   │   └── queries.js
+│   ├── api.js
+│   └── config.js
+├── utils/
+│   ├── date.js
+│   ├── money.js
+│   └── orderStages.js
+├── App.jsx
+├── index.css
+└── main.jsx
 ```
 
 ## Từng file source
