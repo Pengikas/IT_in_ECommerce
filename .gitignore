@@ -1,0 +1,40 @@
+dbml-error.log
+
+# Original downloads and archived repositories stay local.
+/archive/
+/data/etl/bronze/*
+!/data/etl/bronze/README.md
+!/data/etl/bronze/cmapss/
+!/data/etl/bronze/faa/
+!/data/etl/bronze/aviation_parts/
+!/data/etl/bronze/supply_chain/
+!/data/etl/bronze/ecommerce/
+/data/etl/bronze/cmapss/*
+/data/etl/bronze/faa/*
+/data/etl/bronze/aviation_parts/*
+/data/etl/bronze/supply_chain/*
+/data/etl/bronze/ecommerce/*
+!/data/etl/bronze/cmapss/.gitkeep
+!/data/etl/bronze/faa/.gitkeep
+!/data/etl/bronze/aviation_parts/.gitkeep
+!/data/etl/bronze/supply_chain/.gitkeep
+!/data/etl/bronze/ecommerce/.gitkeep
+
+# Generated datasets; folder guides and schema-template generator are tracked.
+/data/etl/silver/**/*.csv
+/data/etl/silver/**/*.parquet
+/data/etl/gold/*.csv
+__pycache__/
+.ipynb_checkpoints/
+
+# Environment variables / secrets
+.env
+.env.*
+!.env.example
+
+# Node.js dependencies
+node_modules/
+
+# Frontend local environment and build output
+/frontend/.env.local
+/frontend/dist/
