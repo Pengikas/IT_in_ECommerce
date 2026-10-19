@@ -1,10 +1,7 @@
   ## Stack (per spec section 11)
 
 React + Vite · Tailwind CSS · React Router · Recharts for the RUL trend
-chart. No backend yet — `src/services/*Api.js` currently return mock data
-(`src/services/mockData.js`) shaped exactly like the future REST responses,
-so swapping to the real Node.js/Express API later is a change inside those
-files only, not in any page or component.
+chart. No backend yet — `src/services/*Api.js` currently return mock data.
 
 ## Getting started
 
@@ -56,7 +53,7 @@ Log in as **Supplier** to see that same order under Supplier → Orders.
 ```
 src/
 ├── 
-├── layouts/                        # Public / Buyer / Supplier / Admin shells
+├── layouts/                        # Public / Buyer / Supplier / Admin
 ├── components/                     # common, marketplace, engine/RUL, order
 ├── pages/{public,buyer,supplier,admin}/
 ├── services/                       # apiClient + mock *Api.js modules (swap-in point for real API)
