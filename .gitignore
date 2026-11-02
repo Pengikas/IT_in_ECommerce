@@ -34,3 +34,10 @@ __pycache__/
 
 # Node.js dependencies
 node_modules/
+
+# Generated APIDoc documentation
+backend/docs/apidoc/
+
+# Frontend local environment and build output
+/frontend/.env.local
+/frontend/dist/
