@@ -1,50 +1,62 @@
-# Frontend Module — AeroRUL Marketplace
+# AeroRUL Frontend
 
-Thư mục này chứa toàn bộ tài nguyên phát triển giao diện người dùng và thiết kế UI/UX cho nền tảng B2B E-Commerce dự đoán RUL phụ tùng & động cơ hàng không (**AeroRUL**).
+The frontend is a React application built with Vite, React Router, and
+Tailwind CSS. The current scaffold provides basic entry pages and navigation
+for public, buyer, supplier, and admin routes.
 
----
-
-## Cấu trúc thư mục
-
-```
-frontend/
-├── Frontend_code/       # Mã nguồn ứng dụng Web Frontend (React + Vite + Tailwind CSS)
-│   ├── src/             # Mã nguồn giao diện, components, pages, routes, services
-│   ├── public/          # Assets tĩnh
-│   ├── package.json     # Quản lý dependencies (React 18, React Router, Recharts, Tailwind)
-│   ├── vite.config.js   # Cấu hình Vite build tool
-│   └── README.md        # Hướng dẫn chạy và cấu trúc chi tiết của mã nguồn Frontend
-│
-└── UI_UX_design/        # Tài liệu thiết kế giao diện và trải nghiệm người dùng
-    ├── screens/         # 25 ảnh chụp màn hình (PNG) và sitemap của hệ thống
-    ├── AeroRUL_UI_UX_All_Screens.pdf  # Toàn bộ slide thiết kế dạng PDF
-    ├── UI_UX_Frontend_Structure_RUL_Aviation_Marketplace_V2.docx # Tài liệu đặc tả UI/UX
-    ├── AI_RUL_B2B_Aviation_Ecommerce_Project_Concept_VI_RUL_Replacement_V3.docx # Concept dự án
-    └── README.md        # Hướng dẫn và đặc tả chi tiết về hệ thống UI/UX
-```
-
----
-
-## 1. Khởi chạy mã nguồn (`Frontend_code`)
-
-Để chạy mã nguồn frontend trên môi trường local:
+## Setup
 
 ```bash
-cd frontend/Frontend_code
-npm install
+npm ci
 npm run dev
 ```
 
-Ứng dụng hỗ trợ đăng nhập giả lập cho 3 vai trò:
-- **Buyer**: Quản lý động cơ, theo dõi biểu đồ suy giảm RUL, nhận đề xuất thay thế phụ tùng, đặt hàng.
-- **Supplier**: Quản lý tồn kho, đăng bán phụ tùng, quản lý đơn hàng.
-- **Admin**: Kiểm duyệt nhà cung cấp, kiểm duyệt sản phẩm, thống kê toàn sàn.
+Vite serves the app at `http://localhost:5173`. Use `npm run build` to create a
+production build and `npm run preview` to preview that build locally.
 
----
+## Structure
 
-## 2. Tài liệu thiết kế (`UI_UX_design`)
+```text
+src/
+├── app/          # App composition and route definitions
+├── auth/         # Authentication and route protection
+├── components/   # Reusable UI components
+├── layouts/      # Shared role-specific page layouts
+├── mocks/        # Demo fixtures and adapters
+├── screens/      # Pages grouped by visitor role
+├── services/     # API clients and domain requests
+├── state/        # Shared application state
+├── styles/       # Global styles and Tailwind entry point
+├── utils/        # Shared formatting and utility functions
+└── main.jsx      # React application entry point
+```
 
-Xem chi tiết trong thư mục [`UI_UX_design`](./UI_UX_design/README.md) để tra cứu:
-- Thiết kế Wireframe & UI High-Fidelity cho tất cả các luồng người dùng (Public, Buyer, Supplier, Admin).
-- Chuẩn màu sắc (Design Tokens), hệ thống cảnh báo RUL (Severity Level Indicators).
-- Danh mục màn hình hoàn chỉnh dạng PDF và hình ảnh trực quan.
+Keep new screens in the matching `screens/<role>/` directory, reusable
+presentation components in `components/`, and role-level chrome in `layouts/`.
+Put API calls in `services/`, shared state in `state/`, and common formatting
+in `utils/`. Keep role-specific logic within that role's existing area rather
+than duplicating shared code.
+
+## Routes
+
+| Path | Layout | Purpose |
+|---|---|---|
+| `/` | PublicLayout | Public AeroRUL landing page |
+| `/buyer` | BuyerLayout | Buyer workspace home |
+| `/supplier` | SupplierLayout | Supplier workspace home |
+| `/admin` | AdminLayout | Admin workspace home |
+
+The navigation bar links between all four routes. Unknown paths redirect to
+the public home page. These routes are scaffold navigation only; authentication
+and authorization are not implemented yet.
+
+## Team conventions
+
+- Use one React component per screen or layout file, with a clear default export.
+- Use React Router `Link`/`NavLink` for in-app navigation; avoid hard-coded
+  browser navigation.
+- Keep shared UI reusable and role-specific screens focused on their own
+  workflows.
+- Keep API and business logic out of screen presentation where practical.
+- Do not commit secrets, `node_modules`, or generated `dist` output.
+- Keep `tailwind.config.js` content paths aligned with files under `src/`.
